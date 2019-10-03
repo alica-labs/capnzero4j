@@ -9,7 +9,6 @@ import de.unikassel.vs.pdDebug.libzmq.zmq_msg_t;
 
 import static de.unikassel.vs.pdDebug.libzmq.LibZMQLibrary.*;
 
-
 public class Subscriber {
     final boolean DEBUG = false;
 
@@ -18,7 +17,7 @@ public class Subscriber {
     private Pointer socket;
     private Pointer context;
 
-    Subscriber() {
+    public Subscriber() {
         this(INSTANCE.zmq_ctx_new());
     }
 
@@ -46,28 +45,27 @@ public class Subscriber {
         NativeSize optValLenM = new NativeSize(0);
 
         switch (protocol) {
-            case UDP:
-                socket = INSTANCE.zmq_socket(context, ZMQ_DISH);
-                check(INSTANCE.zmq_setsockopt(socket, ZMQ_RCVTIMEO, timeout.getPointer(), optValLen), "zmq_setsockopt");
-                check(INSTANCE.zmq_join(socket, groupName), "zmq_join");
-                check(INSTANCE.zmq_bind(socket, "udp://" + address), "zmq_bind");
-                break;
-            case TCP:
-                socket = INSTANCE.zmq_socket(context, ZMQ_SUB);
-                check(INSTANCE.zmq_setsockopt(socket, ZMQ_RCVTIMEO, timeout.getPointer(), optValLen), "zmq_setsockopt");
-                check(INSTANCE.zmq_setsockopt(socket, ZMQ_SUBSCRIBE, m, optValLenM), "zmq_setsockopt");
-                check(INSTANCE.zmq_connect(socket, "tcp://" + address), "zmq_connect");
-                break;
-            case IPC:
-                socket = INSTANCE.zmq_socket(context, ZMQ_SUB);
-                check(INSTANCE.zmq_setsockopt(socket, ZMQ_RCVTIMEO, timeout.getPointer(), optValLen), "zmq_setsockopt");
-                check(INSTANCE.zmq_setsockopt(socket, ZMQ_SUBSCRIBE, m, optValLenM), "zmq_setsockopt");
-                check(INSTANCE.zmq_connect(socket, "ipc://" + address), "zmq_connect");
-                break;
-            default:
-                socket = null;
+        case UDP:
+            socket = INSTANCE.zmq_socket(context, ZMQ_DISH);
+            check(INSTANCE.zmq_setsockopt(socket, ZMQ_RCVTIMEO, timeout.getPointer(), optValLen), "zmq_setsockopt");
+            check(INSTANCE.zmq_join(socket, groupName), "zmq_join");
+            check(INSTANCE.zmq_bind(socket, "udp://" + address), "zmq_bind");
+            break;
+        case TCP:
+            socket = INSTANCE.zmq_socket(context, ZMQ_SUB);
+            check(INSTANCE.zmq_setsockopt(socket, ZMQ_RCVTIMEO, timeout.getPointer(), optValLen), "zmq_setsockopt");
+            check(INSTANCE.zmq_setsockopt(socket, ZMQ_SUBSCRIBE, m, optValLenM), "zmq_setsockopt");
+            check(INSTANCE.zmq_connect(socket, "tcp://" + address), "zmq_connect");
+            break;
+        case IPC:
+            socket = INSTANCE.zmq_socket(context, ZMQ_SUB);
+            check(INSTANCE.zmq_setsockopt(socket, ZMQ_RCVTIMEO, timeout.getPointer(), optValLen), "zmq_setsockopt");
+            check(INSTANCE.zmq_setsockopt(socket, ZMQ_SUBSCRIBE, m, optValLenM), "zmq_setsockopt");
+            check(INSTANCE.zmq_connect(socket, "ipc://" + address), "zmq_connect");
+            break;
+        default:
+            socket = null;
         }
-
 
     }
 
@@ -127,8 +125,12 @@ public class Subscriber {
         if (bytes > 0) {
             Pointer data = INSTANCE.zmq_msg_data(msg);
             NativeSize size = INSTANCE.zmq_msg_size(msg);
-            msg_str = data.getString(0).substring(0, size.intValue());
-            System.out.print("Received \"" + msg_str + "\".");
+
+            byte[] messageBytes = new byte[size.intValue()];
+            data.read(0, messageBytes, 0, size.intValue());
+            msg_str = new String(messageBytes);
+
+            System.out.println("Received \"" + msg_str + "\".");
         }
         System.out.println();
         check(INSTANCE.zmq_msg_close(msg), "zmq_msg_close");
