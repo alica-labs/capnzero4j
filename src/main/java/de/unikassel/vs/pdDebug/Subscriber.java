@@ -10,6 +10,7 @@ import de.unikassel.vs.pdDebug.libzmq.zmq_msg_t;
 import static de.unikassel.vs.pdDebug.libzmq.LibZMQLibrary.*;
 
 public class Subscriber {
+    private int MESSAGE_OFFSET = 24;
     final boolean DEBUG = false;
 
     private Protocol protocol = Protocol.UDP;
@@ -114,7 +115,6 @@ public class Subscriber {
     }
 
     public String getMessage() {
-
         String msg_str = "";
         zmq_msg_t msg = new zmq_msg_t();
         check(INSTANCE.zmq_msg_init(msg), "zmq_msg_init");
@@ -123,14 +123,15 @@ public class Subscriber {
 
         System.out.print("bytes: " + bytes + " | ");
         if (bytes > 0) {
-            Pointer data = INSTANCE.zmq_msg_data(msg);
-            NativeSize size = INSTANCE.zmq_msg_size(msg);
+            Pointer messageData = INSTANCE.zmq_msg_data(msg);
+            int messageSize = INSTANCE.zmq_msg_size(msg).intValue();
 
-            byte[] messageBytes = new byte[size.intValue()];
-            data.read(0, messageBytes, 0, size.intValue());
-            msg_str = new String(messageBytes);
+            int realMessageSize = messageSize - MESSAGE_OFFSET;
+            byte[] messageBytes = new byte[realMessageSize];
+            messageData.read(MESSAGE_OFFSET, messageBytes, 0, realMessageSize);
+            msg_str = new String(messageBytes).replaceAll("\u0000", "");
 
-            System.out.println("Received \"" + msg_str + "\".");
+            System.out.println("Received\n \"" + msg_str + "\".");
         }
         System.out.println();
         check(INSTANCE.zmq_msg_close(msg), "zmq_msg_close");
