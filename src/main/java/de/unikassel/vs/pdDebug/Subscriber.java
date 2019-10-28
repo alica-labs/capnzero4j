@@ -75,7 +75,6 @@ public class Subscriber {
             public void run() {
 
                 try {
-                    System.out.println("Started Subscriber");
                     for (int i = 0; i < frequenzy; i++) {
                         Thread.sleep(1000);
 
@@ -89,7 +88,6 @@ public class Subscriber {
                     // wait to receive the last messages
                     Thread.sleep(frequenzy);
                     destroy();
-                    System.out.println("Closed Subscriber");
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -110,7 +108,6 @@ public class Subscriber {
 
     public String getSerializedMessage() {
         String message = Capnzero.receiveSerializedMessage(socket, protocol.ordinal());
-        System.out.println("Received serialized \"" + message + "\".");
         return message;
     }
 
@@ -121,7 +118,6 @@ public class Subscriber {
 
         int bytes = INSTANCE.zmq_msg_recv(msg, socket, 0);
 
-        System.out.print("bytes: " + bytes + " | ");
         if (bytes > 0) {
             Pointer messageData = INSTANCE.zmq_msg_data(msg);
             int messageSize = INSTANCE.zmq_msg_size(msg).intValue();
@@ -130,8 +126,6 @@ public class Subscriber {
             byte[] messageBytes = new byte[realMessageSize];
             messageData.read(MESSAGE_OFFSET, messageBytes, 0, realMessageSize);
             msg_str = new String(messageBytes).replaceAll("\u0000", "");
-
-            System.out.println("Received\n \"" + msg_str + "\".");
         }
         System.out.println();
         check(INSTANCE.zmq_msg_close(msg), "zmq_msg_close");

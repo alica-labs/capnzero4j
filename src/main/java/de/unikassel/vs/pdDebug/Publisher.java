@@ -30,7 +30,6 @@ public class Publisher {
         IntBuffer minor = IntBuffer.allocate(1);
         IntBuffer patch = IntBuffer.allocate(1);
         INSTANCE.zmq_version(major, minor, patch);
-        System.out.println("ZMQ Version: (" + major.get() + ", " + minor.get() + ", " + patch.get() + ")");
 
         Publisher pub = new Publisher();
         Subscriber sub = new Subscriber();
@@ -68,7 +67,6 @@ public class Publisher {
         Thread t1 = new Thread(new Runnable() {
             public void run() {
                 try {
-                    System.out.println("Started Publisher");
                     for (int i = 0; i < frequenzy; i++) {
                         Thread.sleep(1000);
 
@@ -81,8 +79,6 @@ public class Publisher {
                     }
 
                     destroy();
-                    System.out.println("Closed Publisher");
-
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -134,16 +130,12 @@ public class Publisher {
         NativeSize size = new NativeSize(str.length());
         check(INSTANCE.zmq_msg_init_data(msg, mem, size, null, null), "zmq_msg_init_data");
         check(INSTANCE.zmq_msg_set_group(msg, groupName), "zmq_msg_set_group");
-        System.out.print("(" + protocol.toString() + ") Sending on Group \"" + groupName + "\": \"" + str + "\"");
         int bytes = INSTANCE.zmq_msg_send(msg, socket, 0);
-        System.out.println(" (" + bytes + " bytes)" + (bytes < 0 ? "... FAILED" : "... OK"));
         check(INSTANCE.zmq_msg_close(msg), "zmq_msg_close");
     }
 
     public void sendSerializedMessage(String msg_send) {
-        System.out.print("(" + protocol.toString() + ") Sending on Group \"" + groupName + "\": \"" + msg_send + "\"");
         int numBytesSent = Capnzero.sendMessage(this.socket, this.protocol.ordinal(), this.groupName, msg_send);
-        System.out.println(" (" + numBytesSent + " bytes)" + (numBytesSent < 0 ? "... FAILED" : "... OK"));
     }
 
     private void check(int returnCode, String nameOfMethod) {
